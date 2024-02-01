@@ -9,7 +9,7 @@ from datetime import date
 from IODA_exclusion_workflow import get_all_file_paths
 from subprocess import call
 from pyopenms import MSExperiment, MzMLFile, MassTraceDetection, ElutionPeakDetection, FeatureMap, FeatureFindingMetabo, FeatureXMLFile, FeatureGroupingAlgorithmKD, ConsensusMap, ColumnHeader, ConsensusXMLFile
-
+from IODAUtils import download_copy_mzML
 import glob
 import pandas as pd
 import gc
@@ -44,91 +44,11 @@ def IODA_targeted_workflow(blank_mzML:str,sample_mzML:str,ppm_tolerance:float, n
     logger.info('Path to the input files: ')
     logger.info('Blank: '+blank_mzML)
     logger.info('Sample: '+sample_mzML)
-    
-    # Collect the mzML and copy
-    def download_copy_mzML(input_file):
-        # Test samples
-            #source_mzML = "https://raw.githubusercontent.com/lfnothias/IODA_MS/test2/tests/Euphorbia/exclusion/OpenMS_input/Blank.mzML"
-            #input_mzML = "tests/Euphorbia/Targeted/OpenMS_input/Euphorbia_rogers_latex_Blank_MS1_2uL.mzML"
-            #input_mzML = "https://drive.google.com/file/d/11p2Jau2T-gCQb9KZExWdC7dy8AQWV__l/view?usp=sharing"
-            #input_mzML = "ftp://massive.ucsd.edu/MSV000083306/peak/QE_C18_mzML/QEC18_blank_SPE_20181227092326.mzML"
-
-        today = str(date.today())
-        now = datetime.datetime.now()
-        logger.info(now)
-        logger.info('STARTING the IODA-targeted WORKFLOW with OpenMS')
-        logger.info('======')
-        logger.info('Getting the mzML, please wait ...')
-
-        if input_file.startswith(('http','ftp')):
-            if 'google' in input_file:
-                logger.info('This is the Google Drive download link:'+str(input_file))
-                logger.info('Downloading the mzML, please wait ...')
-                url_id = input_file.split('/', 10)[5]
-                prefixe_google_download = 'https://drive.google.com/uc?export=download&id='
-                input_file = prefixe_google_download+url_id
-                bashCommand1 = "wget --no-check-certificate '"+input_file+"' -O "+os.path.join(OpenMS_folder+"/OpenMS_input/", os.path.basename(input_file)[:-4] + ".mzML")+" || rm -f "+os.path.join(OpenMS_folder+"/OpenMS_input/", os.path.basename(input_file))
-                cp1 = subprocess.run(bashCommand1,shell=True)
-                try:
-                    cp1
-                except subprocess.CalledProcessError:
-                    raise
-            if 'massive.ucsd.edu' in input_file:
-                logger.info('This is the MassIVE repository link: '+str(input_file))
-                logger.info('Downloading the mzML, please wait ... ')
-                bashCommand4 = "wget -r "+input_file+" -O "+os.path.join(OpenMS_folder+"/OpenMS_input/", os.path.basename(input_file)[:-4] + ".mzML")+" || rm -f "+os.path.join(OpenMS_folder+"/OpenMS_input/", os.path.basename(input_file))
-                cp4 = subprocess.run(bashCommand4,shell=True)
-                try:
-                    cp4
-                except subprocess.CalledProcessError:
-                    raise
-
-        elif input_file.endswith(('.raw','.RAW')):
-            logger.info('Thermo RAW file detected')
-            logger.info('This is the input file path: '+str(input_file))
-            bashCommand5 = "mono ThermoRawFileParser/ThermoRawFileParser.exe -i="+input_file+" --logging=2 --ignoreInstrumentErrors --output_file "+os.path.join(OpenMS_folder+"/OpenMS_input/", os.path.basename(input_file)[:-3] + ".mzML")
-            logger.info('The file is converting to mzML thanks ThermoRawFileParser v1.3.4, please wait few seconds ...: '+str(input_file))
-            logger.info(str(bashCommand5))
-            cp5 = subprocess.run(bashCommand5,shell=True)
-            try:
-                cp5
-            except subprocess.CalledProcessError:
-                raise
-
-        else:
-            #Check the file path is correct for local upload
-            logger.info('This is the input file path: '+str(input_file))
-            bashCommand3 = "cp "+input_file+" "+os.path.join("OpenMS_workflow/OpenMS_input/", os.path.basename(input_file))
-            cp3 = subprocess.run(bashCommand3,shell=True)
-            try:
-                cp3
-            except subprocess.CalledProcessError:
-                raise
-        # Error getting the file ! PLEASE VERY THE PATH TO THE FILE OR DOWNLOAD LINK ...
-
-        if input_file.endswith(('.raw','.RAW')):
-            try:
-                f = open(os.path.join("OpenMS_workflow/OpenMS_input/", os.path.basename(input_file)[:-4] + ".mzML"))
-                f.close()
-            except subprocess.CalledProcessError:
-                logger.info('There was an error getting the file !')
-            logger.info('The mzML file was found !')
-
-        elif input_file.endswith(('.mzML','.mzml')):
-            try:
-                f = open(os.path.join("OpenMS_workflow/OpenMS_input/", os.path.basename(input_file)[:-5] + ".mzML"))
-                f.close()
-            except subprocess.CalledProcessError:
-                logger.info('There was an error getting the file !')
-            logger.info('The mzML file was found !')
-
-        logger.info('Copying the mzML to the OpenMS input folder')
 
     # Downloading the two input mzML
     logger.info('Copying the mzML files ...')
     download_copy_mzML(blank_mzML)
     download_copy_mzML(sample_mzML)
-
 
     logger.info('======')
     logger.info('Variables of the pyOpenMS workflow')
