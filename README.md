@@ -59,6 +59,11 @@ conda activate IODA_MassSpec
 
 Now run the following to install pyOpenMS 3.0:
 
+First, try:
+```
+pip install --index-url https://pypi.cs.uni-tuebingen.de/simple/ pyopenms
+```
+
 For Linux:
 
 ```
